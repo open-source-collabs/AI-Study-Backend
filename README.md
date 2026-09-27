@@ -64,12 +64,16 @@ curl http://localhost:3000/health
 ## Environment configuration
 
 Configuration is loaded from `.env` with [dotenv](https://github.com/motdotla/dotenv) at
-startup.
+startup, then read once by `src/config/app.config.js`. That module is the only place allowed to
+touch `process.env`; application code consumes the normalized `appConfig` object instead.
 
-| Variable   | Required | Default     | Description                            |
-| ---------- | -------- | ----------- | -------------------------------------- |
-| `NODE_ENV` | No       | `undefined` | `development`, `test` or `production`. |
-| `PORT`     | No       | `3000`      | TCP port the HTTP server binds to.     |
+| Variable   | Required | Default       | Description                            |
+| ---------- | -------- | ------------- | -------------------------------------- |
+| `NODE_ENV` | No       | `development` | `development`, `test` or `production`. |
+| `PORT`     | No       | `3000`        | TCP port the HTTP server binds to.     |
+
+`PORT` must be an integer between 1 and 65535. An unusable value (garbage, a fraction, or out of
+range) logs a warning and falls back to `3000` rather than failing at startup.
 
 How to configure:
 
@@ -105,7 +109,8 @@ folder being present does not mean the feature exists yet. See the
 ```text
 AI-Study-Backend/
 ├── src/
-│   ├── config/                 # Environment and app configuration    (empty)
+│   ├── config/
+│   │   └── app.config.js       # Runtime configuration, read once at startup
 │   ├── controllers/            # HTTP request/response handling        (empty)
 │   ├── database/
 │   │   ├── config/             # Sequelize CLI config                  (empty)
@@ -151,6 +156,9 @@ Everything listed below exists in the code today. The empty scaffolded folders a
 deliberately **not** listed here — they contain no behaviour yet.
 
 - **Single entry point** — `src/app.js` creates the Express app and starts the HTTP server.
+- **Configuration boundary** — `src/config/app.config.js` resolves `NODE_ENV` and `PORT` from the
+  environment once at startup and exposes them as a frozen `appConfig`. It is the only module that
+  reads `process.env`; `PORT` is validated as a usable TCP port and falls back to `3000`.
 - **Base middleware stack** — security headers (`helmet`), CORS, JSON and URL-encoded body
   parsing (1 MB limit), `x-powered-by` disabled.
 - **Health endpoint** — `GET /health`.
