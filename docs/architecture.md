@@ -156,6 +156,11 @@ Rules:
   file paths, tokens or provider payloads.
 - The global error handler is `src/middleware/error.middleware.js`. It is the only place that
   turns an error into an HTTP response.
+- The global error handler never throws and never writes to a response whose headers have already
+  been sent; it hands that case back to Express instead. Anything it cannot classify — including
+  an operational error carrying an unusable status — is reported as
+  `HTTP_STATUS.INTERNAL_SERVER_ERROR` with the generic message, so every failure keeps the same
+  response shape and exposes no internal detail.
 
 ---
 
