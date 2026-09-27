@@ -19,15 +19,22 @@ still describe what is actually implemented today.
 
 There is exactly **one** entry point: `src/app.js`.
 
-`src/app.js` owns application creation and basic server initialisation: environment loading,
-security headers, CORS, body parsing, a health endpoint, and the registration of the
-not-found and global error middlewares.
+`src/app.js` owns application creation and basic server initialisation: security headers, CORS,
+body parsing, a health endpoint, and the registration of the not-found and global error
+middlewares.
+
+Environment loading belongs to the configuration boundary, **not** to Express app startup.
+`src/config/app.config.js` calls `dotenv` and resolves the environment itself, so any entry point
+that needs configuration — the HTTP app, a database CLI, migrations or seeders — gets the same
+loaded values by requiring that module. No consumer may depend on `src/app.js` having run first.
 
 Rules:
 
 - Do **not** add a second entry point such as `src/server.js` purely to split responsibilities.
 - Do **not** wire the database, queues, schedulers or AI provider clients into `src/app.js`.
   Those layers get their own modules and are connected in a later phase.
+- Do **not** call `dotenv.config()` anywhere except the configuration boundary. Environment
+  loading happens in exactly one place.
 - Bootstrap logic should be small and declarative. When it grows, extract named setup modules
   instead of turning `src/app.js` into a monolith.
 

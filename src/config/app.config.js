@@ -1,11 +1,17 @@
+// Environment loading belongs to the configuration boundary, not to Express
+// startup. Every consumer that needs configuration reaches the same loaded
+// environment by requiring this module, so nothing depends on `src/app.js`
+// having run first. This matters for entry points that never boot the HTTP
+// server, such as database tooling invoked from the command line.
+require('dotenv').config();
+
 const DEFAULT_PORT = 3000;
 const MIN_TCP_PORT = 1;
 const MAX_TCP_PORT = 65535;
 const DEFAULT_NODE_ENV = 'development';
 
-// This module is the only place allowed to read `process.env`. `dotenv` is
-// loaded by `src/app.js` before this module is required, so the environment is
-// already populated when these values are resolved, exactly once, at startup.
+// This module is the only place allowed to read `process.env`. Values are
+// resolved once at load time, after `dotenv` has populated the environment.
 const readNodeEnv = () => {
   const configuredNodeEnv = (process.env.NODE_ENV ?? '').trim();
 
