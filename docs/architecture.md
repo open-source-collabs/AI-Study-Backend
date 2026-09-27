@@ -117,7 +117,7 @@ response.status(HTTP_STATUS.CREATED).json({ ... });
 ```
 
 Available constants: `OK`, `CREATED`, `BAD_REQUEST`, `UNAUTHORIZED`, `FORBIDDEN`,
-`NOT_FOUND`, `CONFLICT`, `INTERNAL_SERVER_ERROR`.
+`NOT_FOUND`, `CONFLICT`, `UNPROCESSABLE_ENTITY`, `INTERNAL_SERVER_ERROR`.
 
 The module is the only place a numeric status may appear. Adding a status means adding it
 there once, never duplicating it in a second file.

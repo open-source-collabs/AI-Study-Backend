@@ -1,12 +1,12 @@
 const { appConfig } = require('../config/app.config');
 const { HTTP_STATUS } = require('../enums/http-statuses');
-const { AppError } = require('../errors/app.error');
+const { AppError, NotFoundError } = require('../errors/app.error');
 
 const isProduction = appConfig.nodeEnv === 'production';
 
 const notFoundMiddleware = (request, response, next) => {
   const { method, originalUrl } = request;
-  next(new AppError(`Route ${method} ${originalUrl} does not exist`, HTTP_STATUS.NOT_FOUND));
+  next(new NotFoundError(`Route ${method} ${originalUrl} does not exist`));
 };
 
 const errorMiddleware = (error, request, response, next) => {

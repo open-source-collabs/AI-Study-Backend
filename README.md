@@ -163,7 +163,9 @@ deliberately **not** listed here — they contain no behaviour yet.
   parsing (1 MB limit), `x-powered-by` disabled.
 - **Health endpoint** — `GET /health`.
 - **Centralized HTTP statuses** — `src/enums/http-statuses.js`.
-- **Base error type** — `AppError` in `src/errors/app.error.js`.
+- **Base error type** — `AppError` in `src/errors/app.error.js`, plus the derived
+  `ValidationError`, `AuthenticationError`, `AuthorizationError`, `NotFoundError` and
+  `ConflictError`.
 - **Async error forwarding** — `asyncHandler` in `src/middleware/async-handler.middleware.js`.
 - **Global error handling** — `notFoundMiddleware` and `errorMiddleware` in
   `src/middleware/error.middleware.js`. Unknown routes return a JSON `404`; unexpected errors
