@@ -1,0 +1,17 @@
+# Normalize line endings in the repository and in every checkout, on every
+# platform. Without this, a Windows clone with core.autocrlf=true checks files
+# out with CRLF while Prettier is configured for LF (endOfLine: 'lf'), so
+# `npm run format:check` fails on files nobody has touched.
+* text=auto eol=lf
+
+# Lockfiles stay generated artifacts: treat them as text, but let the tooling
+# that produced them decide the rest.
+package-lock.json text eol=lf
+
+# Binary assets, if any are added later, must never be line-ending translated.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary

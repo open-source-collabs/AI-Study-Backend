@@ -1,6 +1,16 @@
-{
-  "config": "src/database/config",
-  "migrations-path": "src/database/migrations",
-  "models-path": "src/models",
-  "seeders-path": "src/database/seeders"
-}
+// `sequelize-cli` loads this file with `require()`, and Node loads a file with
+// no extension as JavaScript. A bare JSON body therefore fails to parse, so the
+// paths are exported as a CommonJS module.
+//
+// `config` names the file rather than the directory: the CLI resolves that value
+// and imports it directly, and a bare directory is not an importable module.
+//
+// The values stay relative to the repository root, so the CLI finds the same
+// directories whether it is run through an npm script or by hand, and it never
+// needs `src/app.js`.
+module.exports = {
+  config: 'src/database/config/config.js',
+  'migrations-path': 'src/database/migrations',
+  'models-path': 'src/models',
+  'seeders-path': 'src/database/seeders',
+};

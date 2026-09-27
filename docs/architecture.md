@@ -79,9 +79,84 @@ ESLint and Prettier are the source of truth — never hand-format against them.
 
 ---
 
-## 3. Database conventions (Planned)
+## 3. Database
 
-Introduced in the database/model phase, not before.
+The application reaches PostgreSQL through Sequelize and nothing else:
+
+```text
+Express application
+  -> Sequelize
+    -> PostgreSQL (Supabase)
+```
+
+Supabase's **shared/session pooler** is the current provider, addressed on the PostgreSQL port
+(`5432`). The Supabase JavaScript client and the Supabase Data API are **not** a database access
+path for this project.
+
+### Connection
+
+`DATABASE_URL` is the single database connection string, in the form
+`postgresql://USER:PASSWORD@HOST:PORT/DATABASE`. The real value lives in the local `.env` or in the
+deployment platform's secret store, never in a committed file.
+
+`src/config/database.config.js` owns every connection decision: the dialect, the TLS requirement, the
+pool, column mapping and query logging. Nothing else in the project configures SSL or a pool, so a
+provider change stays a one-file change.
+
+- `DATABASE_URL` is validated when the connection configuration is built. A missing value, a
+  non-PostgreSQL protocol or a malformed string fails immediately with a message that names the
+  variable and never echoes the value, because the value is a credential.
+- TLS is required by default, because the connection is expected to be a remote, pooled one.
+  `?sslmode=disable` is honoured for a local development database, where the socket genuinely is
+  not encrypted.
+- The pool is deliberately small and returns connections quickly, to stay inside a managed
+  provider's connection allowance.
+- Queries are logged one line per statement in `development` and are silent in every other
+  environment, so a chatty query or a slow statement cannot fill production logs with raw SQL.
+- No log line, query log or thrown error may contain the connection string or a password.
+
+### Models and initialization
+
+`src/models/index.js` is the Sequelize and model boundary. It creates the single `Sequelize`
+instance, exposes the model registry, loads model definitions, declares associations, and exposes
+`initializeDatabase()` and `closeDatabase()`.
+
+- Anything that needs the database imports the instance or the registry from that module. A module
+  never builds a connection of its own, so the process shares one pool and one model identity.
+- A model lives in its own `<name>.model.js` file beside `index.js` and exports a factory that
+  receives the shared instance and the data types. A model is introduced in the phase that owns it;
+  no domain model exists yet.
+- `sequelize.models` is the registry, because `sequelize.define()` files every model there. This
+  project keeps no second map that could drift from it.
+- Associations are declared in one place, after every model is loaded, so no model has to require a
+  sibling that may not exist yet.
+- `src/app.js` does not own database initialization and does not import the database boundary. It
+  stays an HTTP concern, and no feature needs the database until a later phase introduces one. Code
+  that does need it calls `initializeDatabase()`.
+
+### Migrations and seeders
+
+**Migrations are the source of truth for the schema.** `sequelize.sync()` is never the production
+strategy: it cannot express a rename, a backfill or a data migration, and it diverges from review
+without anyone noticing. A schema change arrives as a migration in `src/database/migrations/`,
+applied in order.
+
+`.sequelizerc` points `sequelize-cli` at `src/database/config/`, `src/database/migrations/`,
+`src/database/seeders/` and `src/models/`. `src/database/config/config.js` is a thin adapter that
+hands the CLI the same options the application uses, so the CLI needs `DATABASE_URL` and nothing
+else — it never imports `src/app.js`.
+
+| Command                                        | Purpose                              |
+| ---------------------------------------------- | ------------------------------------ |
+| `npm run db:migrate`                           | Apply every pending migration.       |
+| `npm run db:migrate:status`                    | List applied and pending migrations. |
+| `npm run db:migrate:generate -- --name <name>` | Create a new, empty migration file.  |
+| `npm run db:migrate:undo`                      | Roll the last migration back.        |
+| `npm run db:seed:all`                          | Run every seeder.                    |
+| `npm run db:seed:undo`                         | Roll the last seeder back.           |
+
+Seeders carry only the reference data the application itself needs in order to run. Domain
+fixtures — users, study materials, quizzes — belong in tests, not in a seeder.
 
 ### Primary and foreign keys
 
@@ -102,13 +177,19 @@ abbreviated (`u_id`, `sess_id`).
 Every column is `snake_case`. Timestamps are `created_at`, `updated_at`, `deleted_at`, and
 `deleted_at` is reserved for soft deletion semantics.
 
-- JavaScript attributes stay `camelCase` and are mapped with Sequelize `underscored: true`
-  and `field` overrides. The mapping is one-way: the database is `snake_case`, the
-  application is `camelCase`.
+- JavaScript attributes stay `camelCase` and are mapped with Sequelize `underscored: true` and
+  `field` overrides. The mapping is one-way: the database is `snake_case`, the application is
+  `camelCase`.
 - Money, duration and score columns must declare an explicit unit in the name
   (`duration_seconds`, `score_percent`).
 - Provider-specific columns belong in a separate table keyed by the platform entity, so the
   platform model never depends on one AI vendor.
+
+### Authentication is deliberately not here
+
+Supabase Auth is **not** part of the database layer. There is no user table, no JWT verification and
+no authorization in this phase, even though the same provider also offers auth. Identity belongs to
+the authentication phase, which owns that decision.
 
 ---
 
