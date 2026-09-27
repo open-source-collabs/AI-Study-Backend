@@ -1,7 +1,8 @@
+const { appConfig } = require('../config/app.config');
 const { HTTP_STATUS } = require('../enums/http-statuses');
 const { AppError } = require('../errors/app.error');
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = appConfig.nodeEnv === 'production';
 
 const notFoundMiddleware = (request, response, next) => {
   const { method, originalUrl } = request;

@@ -4,14 +4,15 @@ const cors = require('cors');
 const express = require('express');
 const helmet = require('helmet');
 
+const { appConfig } = require('./config/app.config');
 const { HTTP_STATUS } = require('./enums/http-statuses');
 const { errorMiddleware, notFoundMiddleware } = require('./middleware/error.middleware');
 
-const DEFAULT_PORT = 3000;
 const JSON_BODY_LIMIT = '1mb';
 
+const { nodeEnv, port } = appConfig;
+
 const app = express();
-const port = Number.parseInt(process.env.PORT, 10) || DEFAULT_PORT;
 
 app.disable('x-powered-by');
 
@@ -33,7 +34,7 @@ app.use(notFoundMiddleware);
 app.use(errorMiddleware);
 
 app.listen(port, () => {
-  console.log(`AI Study Backend is listening on port ${port} (${process.env.NODE_ENV})`);
+  console.log(`AI Study Backend is listening on port ${port} (${nodeEnv})`);
 });
 
 module.exports = app;
