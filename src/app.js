@@ -4,8 +4,8 @@ const cors = require('cors');
 const express = require('express');
 const helmet = require('helmet');
 
-const { HTTP_STATUS } = require('./constants/http-statuses');
-const { errorMiddleware, notFoundMiddleware } = require('./middlewares/error.middleware');
+const { HTTP_STATUS } = require('./enums/http-statuses');
+const { errorMiddleware, notFoundMiddleware } = require('./middleware/error.middleware');
 
 const DEFAULT_PORT = 3000;
 const JSON_BODY_LIMIT = '1mb';

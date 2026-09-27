@@ -1,4 +1,4 @@
-const { HTTP_STATUS } = require('../constants/http-statuses');
+const { HTTP_STATUS } = require('../enums/http-statuses');
 const { AppError } = require('../errors/app.error');
 
 const isProduction = process.env.NODE_ENV === 'production';

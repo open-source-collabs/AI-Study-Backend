@@ -7,6 +7,12 @@ what exists today and what does not.
 The project is developed in isolated, separately reviewed phases. A later phase must not
 retroactively rewrite these rules; it must follow them.
 
+The full folder skeleton under `src/` (plus `checkpoints/`) is scaffolded **upfront**, so the
+directory layout is complete and stable from the start. This is structure only: every folder's
+actual implementation still lands in the phase that owns it. A folder existing does **not** mean
+the feature exists yet — an empty folder carries no behaviour, and the **Planned** markers below
+still describe what is actually implemented today.
+
 ---
 
 ## 1. Application entry point
@@ -48,10 +54,12 @@ The same rule applies to query helpers: prefer `findStudyMaterialsOwnedByUser()`
 
 - Folders use `kebab-case` and are named after the domain they own
   (`study-materials`, `flashcards`, `study-sessions`).
+- The top-level layer folders are scaffolded upfront and stay put; the domain folders inside them
+  are created by the phase that fills them.
 - Files are named `<kind>.<name>.<ext>` with an explicit kind suffix:
   - `study-material.controller.js`
   - `study-material.service.js`
-  - `study-material.validator.js`
+  - `study-material.schema.js`
   - `study-material.route.js`
   - `async-handler.middleware.js`
   - `app.error.js`
@@ -99,11 +107,11 @@ Every column is `snake_case`. Timestamps are `created_at`, `updated_at`, `delete
 
 ## 4. HTTP status codes
 
-Status codes are never hardcoded in routes, controllers, services or middlewares. They are
-read from the single source of truth `src/constants/http-statuses.js`:
+Status codes are never hardcoded in routes, controllers, services or middleware. They are
+read from the single source of truth `src/enums/http-statuses.js`:
 
 ```js
-const { HTTP_STATUS } = require('../constants/http-statuses');
+const { HTTP_STATUS } = require('../enums/http-statuses');
 
 response.status(HTTP_STATUS.CREATED).json({ ... });
 ```
@@ -139,7 +147,7 @@ Rules:
   `HTTP_STATUS.INTERNAL_SERVER_ERROR` with a generic message and logs the original error.
 - Error messages are safe to return to clients. They must never contain SQL, stack traces,
   file paths, tokens or provider payloads.
-- The global error handler is `src/middlewares/error.middleware.js`. It is the only place that
+- The global error handler is `src/middleware/error.middleware.js`. It is the only place that
   turns an error into an HTTP response.
 
 ---
@@ -151,9 +159,9 @@ Controllers are `async` and are always wrapped in `asyncHandler`. This removes r
 
 ```
 async controller
-  -> asyncHandler          (src/middlewares/async-handler.middleware.js)
+  -> asyncHandler          (src/middleware/async-handler.middleware.js)
   -> next(error)
-  -> errorMiddleware       (src/middlewares/error.middleware.js)
+  -> errorMiddleware       (src/middleware/error.middleware.js)
 ```
 
 Rules:
@@ -167,17 +175,16 @@ Rules:
 
 ## 7. Validation (Planned)
 
-Request and response payload validation uses [Joi](https://joi.dev/) inside
-`src/validators/`.
+Request and response payload validation uses [Joi](https://joi.dev/) inside `src/schemas/`.
 
 Rules:
 
 - Validation runs in a validation middleware, before any controller or service logic.
-- A validator exports schemas only. It never performs I/O, database access or business rules.
-- Validators are named after the domain entity: `auth.validator.js`, `user.validator.js`,
-  `study-material.validator.js`, `summary.validator.js`, `flashcard.validator.js`,
-  `quiz.validator.js`.
-- A validator is created in the phase that introduces its entity, never in advance.
+- A schema module exports Joi schemas only. It never performs I/O, database access or business
+  rules.
+- Schemas are named after the domain entity: `auth.schema.js`, `user.schema.js`,
+  `study-material.schema.js`, `summary.schema.js`, `flashcard.schema.js`, `quiz.schema.js`.
+- A schema is created in the phase that introduces its entity, never in advance.
 
 ---
 

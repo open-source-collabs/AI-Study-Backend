@@ -97,52 +97,71 @@ lands, `npm run lint` plus a manual `GET /health` request is the verification ba
 
 ## Repository structure
 
-Only the folders that the current phase justifies are present. Folders are added together
-with the feature that owns them, not in advance.
+The full folder skeleton is scaffolded upfront, so the tree below is complete. Most folders
+currently hold only a `.gitkeep`: their implementation lands in the phase that owns it, so a
+folder being present does not mean the feature exists yet. See the
+[Roadmap](#roadmap) for what is actually implemented.
 
 ```text
 AI-Study-Backend/
-├── docs/
-│   └── architecture.md        # Engineering conventions (naming, errors, keys, statuses)
 ├── src/
-│   ├── constants/
-│   │   └── http-statuses.js   # Single source of truth for HTTP status codes
+│   ├── config/                 # Environment and app configuration    (empty)
+│   ├── controllers/            # HTTP request/response handling        (empty)
+│   ├── database/
+│   │   ├── config/             # Sequelize CLI config                  (empty)
+│   │   ├── migrations/         # Sequelize migrations                  (empty)
+│   │   └── seeders/            # Sequelize seeders                     (empty)
+│   ├── docs/                   # Runtime-served API documentation      (empty)
+│   ├── enums/
+│   │   └── http-statuses.js    # Single source of truth for HTTP status codes
 │   ├── errors/
-│   │   └── app.error.js       # AppError, base class for operational errors
-│   ├── middlewares/
+│   │   └── app.error.js        # AppError, base class for operational errors
+│   ├── events/                 # In-process event bus                  (empty)
+│   ├── middleware/
 │   │   ├── async-handler.middleware.js  # Wraps async controllers, forwards rejections
 │   │   └── error.middleware.js          # notFoundMiddleware + global errorMiddleware
-│   └── app.js                 # Single entry point: app creation + server start
-├── .env                       # Local configuration (git-ignored)
-├── .env.example               # Committed template, names only
+│   ├── models/
+│   │   └── index.js            # Model registry, filled in the database phase
+│   ├── routes/                 # Express routers per domain           (empty)
+│   ├── schemas/                # Joi schemas, no I/O                   (empty)
+│   ├── scrapers/
+│   │   └── README.md           # Purpose and open questions; no logic yet
+│   ├── services/               # Business logic, no transport concerns (empty)
+│   ├── sse/                    # Server-sent events for live updates    (empty)
+│   ├── utils/                  # Generic dependency-free helpers        (empty)
+│   └── app.js                  # Single entry point: app creation + server start
+├── checkpoints/                # Study-session resume data; purpose README
+├── docs/
+│   └── architecture.md         # Engineering conventions (naming, errors, keys, statuses)
+├── .env.example                # Committed template, names only
 ├── .gitignore
 ├── .prettierignore
-├── eslint.config.js           # ESLint flat config
+├── .sequelizerc                # Points sequelize-cli at src/database/* and src/models
+├── eslint.config.js            # ESLint flat config
 ├── package.json
 ├── package-lock.json
 ├── prettier.config.js
+├── vercel.json                 # Minimal @vercel/node serverless config
 └── README.md
 ```
 
-Planned folders — **not present yet**, each arrives with the phase that needs it:
-`src/controllers/`, `src/routes/`, `src/services/`, `src/validators/`, `src/models/`,
-`src/database/`, `src/utils/`, `src/events/`, `src/sse/`, `src/docs/`, `checkpoints/`.
-
 ## Current implementation
 
-Everything listed below exists in the code today:
+Everything listed below exists in the code today. The empty scaffolded folders above are
+deliberately **not** listed here — they contain no behaviour yet.
 
 - **Single entry point** — `src/app.js` creates the Express app and starts the HTTP server.
 - **Base middleware stack** — security headers (`helmet`), CORS, JSON and URL-encoded body
   parsing (1 MB limit), `x-powered-by` disabled.
 - **Health endpoint** — `GET /health`.
-- **Centralized HTTP statuses** — `src/constants/http-statuses.js`.
+- **Centralized HTTP statuses** — `src/enums/http-statuses.js`.
 - **Base error type** — `AppError` in `src/errors/app.error.js`.
-- **Async error forwarding** — `asyncHandler` in `src/middlewares/async-handler.middleware.js`.
+- **Async error forwarding** — `asyncHandler` in `src/middleware/async-handler.middleware.js`.
 - **Global error handling** — `notFoundMiddleware` and `errorMiddleware` in
-  `src/middlewares/error.middleware.js`. Unknown routes return a JSON `404`; unexpected errors
+  `src/middleware/error.middleware.js`. Unknown routes return a JSON `404`; unexpected errors
   return a generic JSON `500` and are logged server-side.
-- **Tooling** — ESLint flat config, Prettier config, npm scripts.
+- **Tooling** — ESLint flat config, Prettier config, npm scripts, `.sequelizerc` (sequelize-cli
+  paths) and `vercel.json` (serverless deploy config).
 
 ## Architecture
 

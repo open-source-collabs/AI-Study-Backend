@@ -1,4 +1,4 @@
-const { HTTP_STATUS } = require('../constants/http-statuses');
+const { HTTP_STATUS } = require('../enums/http-statuses');
 
 class AppError extends Error {
   constructor(message, statusCode = HTTP_STATUS.INTERNAL_SERVER_ERROR) {
